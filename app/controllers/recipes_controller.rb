@@ -8,12 +8,6 @@ class RecipesController < ApplicationController
 
   # GET /recipes/1
   def show
-    client = OpenAI::Client.new
-    chaptgpt_response = client.chat(parameters: {
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: "Give me a simple recipe for #{@recipe.name} with the ingredients #{@recipe.ingredients}. Give me only the text of the recipe, without any of your own answer like 'Here is a simple recipe'."}]
-    })
-    @content = chaptgpt_response["choices"][0]["message"]["content"]
   end
 
   # GET /recipes/new
