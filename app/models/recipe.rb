@@ -1,6 +1,13 @@
+require 'open-uri'
+
 class Recipe < ApplicationRecord
-  after_save :set_content, if: -> { saved_change_to_name? || saved_change_to_ingredients? }
-  
+  after_save if: -> { saved_change_to_name? || saved_change_to_ingredients? } do
+    set_content
+    set_photo
+  end
+
+
+  has_one_attached :photo
   # def content
   #   Rails.cache.fetch("#{cache_key_with_version}/content") do #value will recalculate even when cached if the underlying data has changed
   #     client = OpenAI::Client.new
@@ -31,5 +38,18 @@ class Recipe < ApplicationRecord
     new_content = chaptgpt_response["choices"][0]["message"]["content"]
     update(content: new_content) # same as self.update
     new_content
+  end
+
+  def set_photo
+    client = OpenAI::Client.new
+    response = client.images.generate(parameters: {
+      prompt: "Give me an image of #{name}",
+      size: "256x256"
+    })
+    url = response["data"][0]["url"]
+    file = URI.open(url)
+    photo.purge if photo.attached?
+    photo.attach(io: file, filename: "#{name}.png", content_type: "image/png" )
+    photo
   end
 end
